@@ -1,0 +1,65 @@
+---
+title: "Building a Production RAG System from Scratch"
+date: "2025-12-10"
+readingTime: 8
+excerpt: "A deep dive into building a retrieval-augmented generation system that actually works in production — covering chunking strategies, embedding choices, and latency trade-offs."
+tags: ["AI", "RAG", "LangChain", "Python"]
+---
+
+# Building a Production RAG System from Scratch
+
+Retrieval-Augmented Generation (RAG) is one of the most practical patterns in modern AI engineering. But most tutorials show you the happy path. Production is different.
+
+## The Core Idea
+
+RAG augments an LLM's knowledge by retrieving relevant context from a document store before generating a response. The pipeline looks like this:
+
+```
+Query → Embed → Vector Search → Top-K Chunks → LLM → Response
+```
+
+Simple in theory. Chaotic in practice.
+
+## Chunking Is Everything
+
+The most underappreciated decision in RAG is how you chunk your documents. Fixed-size chunking is easy but breaks semantic units. Recursive character splitting (LangChain's default) is better. Semantic chunking is best but expensive.
+
+**My recommendation for most use cases:** recursive splitting with ~500 token chunks and 100 token overlap.
+
+```python
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=500,
+    chunk_overlap=100,
+    separators=["\n\n", "\n", " ", ""],
+)
+chunks = splitter.split_text(document_text)
+```
+
+## Choosing Embeddings
+
+| Model | Speed | Quality | Cost |
+|---|---|---|---|
+| `all-MiniLM-L6-v2` | Fast | Good | Free |
+| `text-embedding-3-small` | Medium | Great | $0.02/1M tokens |
+| `bge-large-en` | Slow | Excellent | Free |
+
+For a personal portfolio, `all-MiniLM-L6-v2` is more than sufficient.
+
+## The Latency Problem
+
+A naive RAG system adds 300–800ms to every response. You can cut this significantly:
+
+1. **Pre-embed at ingestion time** — never embed on query path unless necessary
+2. **HNSW index** — ChromaDB uses this by default, so you're covered
+3. **Reduce top-K** — start with 3, not 10
+4. **Cache common queries** — Redis with 24h TTL for FAQ-style queries
+
+## Lessons Learned
+
+- Garbage in, garbage out — document quality matters more than model quality
+- Always add a fallback for when retrieval returns empty results
+- Monitor your embedding distribution — drift happens
+
+Building this system for my portfolio was a great way to understand RAG from first principles. The code is on GitHub if you want to explore it.

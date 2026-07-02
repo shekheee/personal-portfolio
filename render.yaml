@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: ajay-portfolio-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: ENVIRONMENT
+        value: production
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: GITHUB_USERNAME
+        value: shekheee
+      - key: ALLOWED_ORIGINS
+        value: https://ajayshekhawat.co.uk,https://www.ajayshekhawat.co.uk
+      # Secrets — set these in the Render dashboard (sync: false keeps them out of git).
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: CONTACT_RECIPIENT
+        sync: false

@@ -1,0 +1,55 @@
+---
+title: "Why Your Portfolio Website Should Have a Hidden Terminal"
+date: "2025-11-20"
+readingTime: 4
+excerpt: "A case for building unexpected, delightful Easter eggs into your personal site — and how a hidden CLI command interface can make you memorable to recruiters and engineers alike."
+tags: ["Career", "Frontend", "UX"]
+---
+
+# Why Your Portfolio Website Should Have a Hidden Terminal
+
+Most portfolio sites are the same: hero section, skills, projects, contact form. Done.
+
+Yours doesn't have to be.
+
+## Recruiters See Hundreds of Portfolios
+
+The average recruiter spends 6 seconds on a resume. A portfolio gets slightly more — but not much. You need a hook.
+
+A hidden terminal is exactly that kind of hook.
+
+## What It Signals
+
+When an engineer discovers your hidden `Ctrl+`` terminal and types `neofetch` to get a fake system stats screen about you, it does several things:
+
+1. **Shows you think about UX** — You built something beyond the spec
+2. **Signals personality** — Not a copy-paste template developer
+3. **Demonstrates technical depth** — Implementing a command parser + history is non-trivial
+4. **It's just fun** — And fun is memorable
+
+## How I Built It
+
+The terminal is a React component that:
+- Triggers on `Ctrl+`` or triple-clicking the logo (hint: try it 👀)
+- Maintains command history (arrow keys work)
+- Executes a dictionary of command handlers
+- Uses Framer Motion for smooth open/close animation
+- Fires confetti when you type `sudo hire me`
+
+The whole thing is ~200 lines of TypeScript. No dependencies beyond what the site already uses.
+
+## Commands Worth Including
+
+Beyond `help` and `about`, these tend to get reactions:
+
+- **`sudo hire me`** → Pretend to "execute" a hiring sequence (+ confetti)
+- **`neofetch`** → Show fake "system info" about yourself (OS: Human 1.0, RAM: ∞ coffee)
+- **`cat resume.txt`** → ASCII resume summary
+- **`ls`** → Show the site's "file system"
+- **`exit`** → Close the terminal
+
+## The Right Balance
+
+Don't over-engineer it. The goal is delight, not complexity. A clean implementation that works reliably is better than a technically impressive one that's buggy.
+
+Keep it fast, keep it funny, and keep it you.

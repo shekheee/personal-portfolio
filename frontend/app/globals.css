@@ -1,0 +1,123 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* ─── Design Tokens ─── */
+:root {
+  --bg: #0a0a0a;
+  --bg-secondary: #0f1117;
+  --bg-card: #111827;
+  --border: #1f2937;
+  --border-bright: #374151;
+  --cyan: #00d4ff;
+  --cyan-dim: #0ea5e9;
+  --green: #00ff41;
+  --green-dim: #22c55e;
+  --text-primary: #f0f6fc;
+  --text-secondary: #8b949e;
+  --text-muted: #484f58;
+  --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+  --background: #0a0a0a;
+  --foreground: #f0f6fc;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ─── Base Reset ─── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans, system-ui, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--cyan-dim); }
+
+/* ─── Selection ─── */
+::selection { background: rgba(0,212,255,0.2); color: var(--cyan); }
+
+/* ─── CRT Scanlines ─── */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ─── Glitch Effect ─── */
+.glitch { position: relative; }
+.glitch:hover::before,
+.glitch:hover::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+.glitch:hover::before {
+  color: var(--cyan);
+  animation: glitch-1 0.3s infinite;
+  clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+}
+.glitch:hover::after {
+  color: #ff0055;
+  animation: glitch-2 0.3s infinite;
+  clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+}
+@keyframes glitch-1 {
+  0%   { transform: translate(2px, -1px); }
+  25%  { transform: translate(-2px, 1px); }
+  50%  { transform: translate(1px, 2px); }
+  75%  { transform: translate(-1px, -2px); }
+  100% { transform: translate(2px, -1px); }
+}
+@keyframes glitch-2 {
+  0%   { transform: translate(-2px, 1px); }
+  25%  { transform: translate(2px, -1px); }
+  50%  { transform: translate(-1px, -2px); }
+  75%  { transform: translate(1px, 2px); }
+  100% { transform: translate(-2px, 1px); }
+}
+
+/* ─── Blinking cursor ─── */
+.cursor-blink::after {
+  content: "▋";
+  color: var(--cyan);
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ─── Utilities ─── */
+.section-container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+.section-label { color: var(--cyan); font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; }
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+.card:hover { border-color: var(--cyan); box-shadow: 0 0 20px rgba(0,212,255,0.08); }
+.terminal-prompt::before { content: "$ "; color: var(--green); font-family: var(--font-mono); }
+.glow-cyan { text-shadow: 0 0 20px rgba(0,212,255,0.5); }
+.glow-green { text-shadow: 0 0 20px rgba(0,255,65,0.5); }
+.border-glow-cyan { box-shadow: 0 0 0 1px var(--cyan), 0 0 20px rgba(0,212,255,0.15); }
