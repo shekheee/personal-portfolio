@@ -8,7 +8,6 @@ import Skills from "@/components/Skills";
 import Timeline from "@/components/Timeline";
 import Projects from "@/components/Projects";
 import GitHub from "@/components/GitHub";
-import Testimonials from "@/components/Testimonials";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
@@ -56,7 +55,6 @@ export default function HomeClient({ posts }: HomeClientProps) {
         <Projects />
         <GitHub />
         <Blog posts={posts} />
-        <Testimonials />
         <Contact />
       </main>
       <Footer />

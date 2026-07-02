@@ -29,7 +29,7 @@ export default function About() {
             <div className="flex flex-col gap-2">
               <span className="flex items-center gap-2 text-sm text-[var(--text-secondary)] font-mono">
                 <MapPin size={14} className="text-[var(--cyan)]" />
-                San Francisco, CA
+                United Kingdom
               </span>
               <span className="flex items-center gap-2 text-sm text-[var(--text-secondary)] font-mono">
                 <Briefcase size={14} className="text-[var(--cyan)]" />

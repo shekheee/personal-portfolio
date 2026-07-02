@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Ajay Shekhawat | Software Engineer & AI Builder",
   description:
-    "Personal portfolio of Ajay Shekhawat — Software Engineer specialising in AI, full-stack development, RAG systems, and distributed systems. Explore projects, skills, and a RAG-powered chatbot.",
+    "Personal portfolio of Ajay Shekhawat — Data Scientist & AI Engineer specialising in machine learning, RAG systems, and LLM-powered applications. Explore projects, skills, and a RAG-powered chatbot.",
   openGraph: {
     title: "Ajay Shekhawat | Software Engineer",
     description: "Portfolio with RAG chatbot, live GitHub stats, and a hidden terminal easter egg.",

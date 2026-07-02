@@ -35,23 +35,24 @@ const COMMANDS: Record<string, () => string> = {
 I build intelligent systems, ship fast products, and sometimes make
 computers do things they weren't supposed to. RAG fan.
 
-Currently based in San Francisco, CA.
+Currently based in the United Kingdom.
 Open to interesting opportunities.`,
   skills: () =>
-    `Languages:   Python · TypeScript · JavaScript · SQL · Rust · Go
-Frameworks:  Next.js · React · FastAPI · LangChain · PyTorch
-Tools:       Docker · Git · PostgreSQL · Redis · Elasticsearch
-Cloud:       AWS · GCP · Vercel · Kubernetes`,
+    `Languages:   Python · SQL · R · PySpark · Excel/VBA
+AI / ML:     LangChain · LlamaIndex · scikit-learn · Keras/TensorFlow · NLP
+Data:        Pandas · NumPy · Databricks · Tableau · PowerBI
+Vector DBs:  ChromaDB · Pinecone · Weaviate
+Cloud:       Azure · AWS · Azure Data Factory`,
   projects: () =>
     `Recent Projects:
-[1] RAG Agent Platform     — ChromaDB + LangChain + FastAPI
-[2] Portfolio Website      — Next.js + FastAPI + Docker  ← you are here
-[3] ML Training Pipeline   — PyTorch + MLflow + K8s
-[4] Real-time Dashboard    — React + Kafka + Redis WebSockets
-[5] DevTools CLI           — Rust CLI for dev automation`,
-  github: () => `GitHub: https://github.com/shekheee
-Stars: ★ ★ ★ ★ ★
-Top repos: rag-agent, portfolio, ml-pipeline, devtools-cli`,
+[1] RAG Annotation Platform    — FastAPI + LangChain + ChromaDB/Pinecone
+[2] Credit Risk ML Model       — 12.6% revenue uplift @ AB InBev
+[3] GenAI Logistics Assistant  — LangChain POC @ AB InBev
+[4] Fuel Consumption Predictor — $500k savings @ Piramal Glass
+[5] AI Portfolio Website       — Next.js + FastAPI  ← you are here`,
+  github: () => `GitHub:       https://github.com/shekheee
+Public repos: 4
+This site:    github.com/shekheee/personal-portfolio`,
   contact: () =>
     `Email:    shekhawatajay8@gmail.com
 LinkedIn: linkedin.com/in/ajay-shekhawat
@@ -87,7 +88,6 @@ Certs:     Azure DP-100 · AWS SAA · Azure AI Fundamentals`,
 ├── projects/
 ├── github/
 ├── blog/
-├── testimonials/
 ├── contact/
 └── resume.pdf`,
   neofetch: () =>
