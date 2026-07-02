@@ -18,7 +18,7 @@ services:
       - key: GITHUB_USERNAME
         value: shekheee
       - key: ALLOWED_ORIGINS
-        value: https://ajayshekhawat.co.uk,https://www.ajayshekhawat.co.uk
+        value: https://ajayshekhawat.uk,https://www.ajayshekhawat.uk
       # Secrets — set these in the Render dashboard (sync: false keeps them out of git).
       - key: GROQ_API_KEY
         sync: false
