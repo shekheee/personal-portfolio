@@ -65,25 +65,25 @@ async def chat(request: ChatRequest, settings: Settings = Depends(get_settings))
 
     context = await get_rag_context(user_message)
 
-    has_llm = bool(settings.anthropic_api_key or settings.openai_api_key or settings.groq_api_key)
+    provider = "fallback"
+    model = "none"
+    token_stream: AsyncIterator[str]
+
+    if settings.anthropic_api_key or settings.openai_api_key or settings.groq_api_key:
+        messages = [
+            {"role": "system", "content": f"{SYSTEM_PROMPT}\n\nContext about the portfolio owner:\n{context}"},
+            {"role": "user", "content": user_message},
+        ]
+        token_stream, provider, model = await stream_chat(messages, settings)
+    else:
+        token_stream = _stream_fallback(user_message)
 
     async def event_stream():
         try:
-            if has_llm:
-                messages = [
-                    {"role": "system", "content": f"{SYSTEM_PROMPT}\n\nContext about the portfolio owner:\n{context}"},
-                    {"role": "user", "content": user_message},
-                ]
-                token_stream, provider, model = await stream_chat(messages, settings)
-                async for chunk in token_stream:
-                    yield f"data: {json.dumps({'content': chunk})}\n\n"
-                logger.info("Chat completed session=%s provider=%s model=%s", session_id, provider, model)
-            else:
-                async for chunk in _stream_fallback(user_message):
-                    yield f"data: {json.dumps({'content': chunk})}\n\n"
-
+            async for chunk in token_stream:
+                yield f"data: {json.dumps({'content': chunk})}\n\n"
+            logger.info("Chat completed session=%s provider=%s model=%s", session_id, provider, model)
             yield "data: [DONE]\n\n"
-
         except Exception as e:
             logger.error(f"Chat stream error: {e}")
             yield f"data: {json.dumps({'error': 'Stream failed'})}\n\n"
@@ -95,5 +95,7 @@ async def chat(request: ChatRequest, settings: Settings = Depends(get_settings))
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",
             "X-Session-ID": session_id,
+            "X-LLM-Provider": provider,
+            "X-LLM-Model": model,
         },
     )
