@@ -7,11 +7,13 @@ class Settings(BaseSettings):
     app_name: str = "Resume API"
     environment: str = "development"
 
-    # LLM — Groq (free, OpenAI-compatible) is preferred; OpenAI is a fallback.
+    # LLM — Anthropic Fable 5 is primary; OpenAI GPT-5.6 and Groq are fallbacks.
+    anthropic_api_key: str = ""
+    anthropic_model: str = "claude-fable-5"
+    openai_api_key: str = ""
+    openai_model: str = "gpt-5.6"
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"
-    openai_api_key: str = ""
-    openai_model: str = "gpt-4o-mini"
 
     # Email (SMTP) — optional; contact form degrades gracefully if unset.
     smtp_host: str = "smtp.gmail.com"

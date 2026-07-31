@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.config import get_settings, Settings
+from app.services.llm import stream_chat
 from app.services.rag import get_rag_context
 
 logger = logging.getLogger(__name__)
@@ -34,26 +35,6 @@ Rules:
 class ChatRequest(BaseModel):
     message: str
     session_id: str | None = None
-
-
-async def _stream_openai(messages: list[dict], model: str, api_key: str, base_url: str | None = None) -> AsyncIterator[str]:
-    from openai import AsyncOpenAI
-
-    kwargs = {"api_key": api_key}
-    if base_url:
-        kwargs["base_url"] = base_url
-    client = AsyncOpenAI(**kwargs)
-    stream = await client.chat.completions.create(
-        model=model,
-        messages=messages,
-        stream=True,
-        max_tokens=256,
-        temperature=0.7,
-    )
-    async for chunk in stream:
-        delta = chunk.choices[0].delta.content
-        if delta:
-            yield delta
 
 
 async def _stream_fallback(query: str) -> AsyncIterator[str]:
@@ -84,26 +65,19 @@ async def chat(request: ChatRequest, settings: Settings = Depends(get_settings))
 
     context = await get_rag_context(user_message)
 
-    has_groq = bool(settings.groq_api_key)
-    has_openai = bool(settings.openai_api_key)
+    has_llm = bool(settings.anthropic_api_key or settings.openai_api_key or settings.groq_api_key)
 
     async def event_stream():
         try:
-            if has_groq or has_openai:
-                if has_groq:
-                    api_key = settings.groq_api_key
-                    model = settings.groq_model
-                    base_url = "https://api.groq.com/openai/v1"
-                else:
-                    api_key = settings.openai_api_key
-                    model = settings.openai_model
-                    base_url = None
+            if has_llm:
                 messages = [
                     {"role": "system", "content": f"{SYSTEM_PROMPT}\n\nContext about the portfolio owner:\n{context}"},
                     {"role": "user", "content": user_message},
                 ]
-                async for chunk in _stream_openai(messages, model, api_key, base_url):
+                token_stream, provider, model = await stream_chat(messages, settings)
+                async for chunk in token_stream:
                     yield f"data: {json.dumps({'content': chunk})}\n\n"
+                logger.info("Chat completed session=%s provider=%s model=%s", session_id, provider, model)
             else:
                 async for chunk in _stream_fallback(user_message):
                     yield f"data: {json.dumps({'content': chunk})}\n\n"
