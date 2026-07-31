@@ -36,8 +36,8 @@ const LANG_COLORS: Record<string, string> = {
   Shell: "#89e051",
 };
 
-function ContributionHeatmap({ contributions }: { contributions: Contribution[] }) {
-  if (!contributions.length) {
+function ContributionHeatmap({ contributions = [] }: { contributions?: Contribution[] }) {
+  if (!contributions?.length) {
     return (
       <p className="text-xs font-mono text-[var(--text-muted)] italic">
         Add a GitHub token to display contribution heatmap
@@ -87,8 +87,14 @@ export default function GitHub() {
       fetch(`${BACKEND_URL}/api/github/stats`).then((r) => r.json()).catch(() => null),
       fetch(`${BACKEND_URL}/api/github/contributions`).then((r) => r.json()).catch(() => ({ contributions: [] })),
     ]).then(([s, c]) => {
-      if (s && !s.detail) setStats(s);
-      setContributions(c?.contributions ?? []);
+      if (s && !s.detail) {
+        setStats({
+          ...s,
+          top_languages: Array.isArray(s.top_languages) ? s.top_languages : [],
+        });
+      }
+      const rows = Array.isArray(c?.contributions) ? c.contributions : [];
+      setContributions(rows);
       setLoading(false);
     });
   }, []);
@@ -147,7 +153,7 @@ export default function GitHub() {
             >
               <p className="text-sm font-mono text-[var(--text-secondary)] mb-4">Top Languages</p>
               <div className="flex flex-wrap gap-3">
-                {stats.top_languages.map(({ language, count }) => (
+                {(stats.top_languages ?? []).map(({ language, count }) => (
                   <div key={language} className="flex items-center gap-2">
                     <span
                       className="w-3 h-3 rounded-full shrink-0"

@@ -57,7 +57,7 @@ export default function Blog({ posts }: BlogProps) {
                         {post.readingTime} min read
                       </span>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        {post.tags.map((tag) => (
+                        {(post.tags ?? []).map((tag) => (
                           <span
                             key={tag}
                             className="flex items-center gap-0.5 px-2 py-0.5 rounded bg-[var(--border)] font-mono"

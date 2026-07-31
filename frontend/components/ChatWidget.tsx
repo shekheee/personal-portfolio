@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, Bot, User, Minimize2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { BACKEND_URL } from "@/lib/utils";
 
 interface Message {
@@ -18,6 +20,46 @@ const WELCOME: Message = {
   content: "Hey! I'm an AI assistant trained on this portfolio. Ask me anything — about skills, projects, experience, or anything else you'd like to know.",
 };
 
+function MessageBody({ msg }: { msg: Message }) {
+  const content = msg.content ?? "";
+
+  if (msg.streaming && !content) {
+    return <span className="cursor-blink" />;
+  }
+
+  if (msg.role === "assistant" && content) {
+    return (
+      <>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+            ul: ({ children }) => <ul className="list-disc pl-4 mb-2 last:mb-0">{children}</ul>,
+            ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 last:mb-0">{children}</ol>,
+            li: ({ children }) => <li className="mb-0.5">{children}</li>,
+            strong: ({ children }) => <strong className="text-[var(--text-primary)] font-semibold">{children}</strong>,
+            a: ({ href, children }) => (
+              <a href={href} target="_blank" rel="noopener noreferrer" className="text-[var(--cyan)] underline">
+                {children}
+              </a>
+            ),
+          }}
+        >
+          {content}
+        </ReactMarkdown>
+        {msg.streaming ? <span className="cursor-blink" /> : null}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {content}
+      {msg.streaming && content ? <span className="cursor-blink" /> : null}
+    </>
+  );
+}
+
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
@@ -26,6 +68,8 @@ export default function ChatWidget() {
   const [sessionId] = useState(() => crypto.randomUUID());
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pendingContentRef = useRef<string | null>(null);
+  const flushTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -35,18 +79,46 @@ export default function ChatWidget() {
     if (open) inputRef.current?.focus();
   }, [open]);
 
+  useEffect(() => {
+    return () => {
+      if (flushTimerRef.current !== null) {
+        window.clearTimeout(flushTimerRef.current);
+      }
+    };
+  }, []);
+
+  const flushAssistantContent = useCallback((assistantId: string, content: string) => {
+    setMessages((prev) =>
+      (prev ?? []).map((m) => (m.id === assistantId ? { ...m, content } : m))
+    );
+  }, []);
+
+  const queueAssistantContent = useCallback(
+    (assistantId: string, content: string) => {
+      pendingContentRef.current = content;
+      if (flushTimerRef.current !== null) return;
+
+      flushTimerRef.current = window.setTimeout(() => {
+        flushTimerRef.current = null;
+        const next = pendingContentRef.current;
+        if (next !== null) flushAssistantContent(assistantId, next);
+      }, 50);
+    },
+    [flushAssistantContent]
+  );
+
   const sendMessage = useCallback(async () => {
     const text = input.trim();
     if (!text || streaming) return;
 
     const userMsg: Message = { id: crypto.randomUUID(), role: "user", content: text };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages((prev) => [...(prev ?? []), userMsg]);
     setInput("");
     setStreaming(true);
 
     const assistantId = crypto.randomUUID();
     const assistantMsg: Message = { id: assistantId, role: "assistant", content: "", streaming: true };
-    setMessages((prev) => [...prev, assistantMsg]);
+    setMessages((prev) => [...(prev ?? []), assistantMsg]);
 
     try {
       const res = await fetch(`${BACKEND_URL}/api/chat`, {
@@ -60,37 +132,50 @@ export default function ChatWidget() {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let accumulated = "";
+      let buffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           const data = line.slice(6).trim();
           if (data === "[DONE]") break;
           try {
-            const parsed = JSON.parse(data);
-            if (parsed.content) {
-              accumulated += parsed.content;
-              setMessages((prev) =>
-                prev.map((m) => (m.id === assistantId ? { ...m, content: accumulated } : m))
-              );
+            const parsed = JSON.parse(data) as { content?: unknown; error?: string };
+            if (parsed.error) throw new Error(parsed.error);
+            if (parsed.content != null && parsed.content !== "") {
+              accumulated += String(parsed.content);
+              queueAssistantContent(assistantId, accumulated);
             }
-          } catch {
-            // Partial JSON — skip
+          } catch (err) {
+            if (err instanceof SyntaxError) continue;
+            throw err;
           }
         }
       }
 
+      if (flushTimerRef.current !== null) {
+        window.clearTimeout(flushTimerRef.current);
+        flushTimerRef.current = null;
+      }
+      flushAssistantContent(assistantId, accumulated);
+
       setMessages((prev) =>
-        prev.map((m) => (m.id === assistantId ? { ...m, streaming: false } : m))
+        (prev ?? []).map((m) => (m.id === assistantId ? { ...m, streaming: false } : m))
       );
     } catch {
+      if (flushTimerRef.current !== null) {
+        window.clearTimeout(flushTimerRef.current);
+        flushTimerRef.current = null;
+      }
       setMessages((prev) =>
-        prev.map((m) =>
+        (prev ?? []).map((m) =>
           m.id === assistantId
             ? { ...m, content: "Sorry, I ran into an issue. Please try again.", streaming: false }
             : m
@@ -99,7 +184,7 @@ export default function ChatWidget() {
     } finally {
       setStreaming(false);
     }
-  }, [input, streaming, sessionId]);
+  }, [input, streaming, sessionId, queueAssistantContent, flushAssistantContent]);
 
   return (
     <>
@@ -158,7 +243,7 @@ export default function ChatWidget() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
-              {messages.map((msg) => (
+              {(messages ?? []).map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
@@ -179,8 +264,7 @@ export default function ChatWidget() {
                         : "bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--border)] rounded-tl-none"
                     }`}
                   >
-                    {msg.content || (msg.streaming ? <span className="cursor-blink" /> : "")}
-                    {msg.streaming && msg.content && <span className="cursor-blink" />}
+                    <MessageBody msg={msg} />
                   </div>
                 </div>
               ))}
